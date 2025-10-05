@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Invest_IMMO – App</title>
+<style>
+  :root{
+    --bg:#0e1116;
+    --card:#151a22;
+    --muted:#a8b3cf;
+    --text:#e6e9ef;
+    --accent:#4cc9f0;
+    --accent2:#80ed99;
+    --warn:#ffb703;
+    --bad:#ef476f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--text)}
+  header{position:sticky;top:0;z-index:5;background:rgba(14,17,22,.7);backdrop-filter:saturate(1.1) blur(6px); border-bottom:1px solid #232a35}
+  .wrap{max-width:1200px;margin:auto;padding:16px}
+  h1{font-size:20px;margin:0 0 6px}
+  h2{font-size:16px;margin:18px 0 8px;color:var(--muted)}
+  .grid{display:grid; gap:16px}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+  .cols-2{grid-template-columns:repeat(2,1fr)}
+  .card{background:var(--card); border:1px solid #232a35; border-radius:12px; padding:14px}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  input, select, textarea{width:100%;background:#0c1016;border:1px solid #2a3342;color:var(--text);
+                          padding:10px;border-radius:10px;outline:none}
+  input:focus, select:focus, textarea:focus{border-color:var(--accent)}
+  .row{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:8px;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;border:1px solid #2a3342;background:#0c1016;color:var(--text); cursor:pointer}
+  .btn.primary{background:linear-gradient(90deg,var(--accent),#7b9cff); border-color:transparent; color:#04101c; font-weight:600}
+  .btn.ghost{background:transparent}
+  .btn.warn{background:var(--warn);color:#1a1a1a;border:none}
+  .btn:active{transform:translateY(1px)}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px;border-bottom:1px solid #232a35;text-align:left}
+  th{color:var(--muted);font-weight:600}
+  .muted{color:var(--muted)}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:12px}
+  .ok{background:rgba(128,237,153,.15); color:var(--accent2)}
+  .ko{background:rgba(239,71,111,.15); color:var(--bad)}
+  .warnpill{background:rgba(255,183,3,.15); color:var(--warn)}
+  .kpi{display:grid; grid-template-columns:repeat(5,1fr); gap:10px}
+  .kpi .card{padding:12px}
+  .kpi h3{margin:0;color:var(--muted);font-weight:500;font-size:12px}
+  .kpi p{margin:4px 0 0; font-weight:700; font-size:18px}
+  footer{padding:30px 0;color:var(--muted)}
+  .right{justify-self:end}
+  .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  .flex{display:flex; gap:8px; flex-wrap:wrap}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap flex">
+    <div>
+      <h1>📊 Invest_IMMO – simulateur LMP + SASU</h1>
+      <div class="muted">Paramètres → Saisie bien → Résultats & Comparateur de villes → Export</div>
+    </div>
+    <div class="right flex">
+      <button class="btn" onclick="window.print()">🖨️ Imprimer / PDF</button>
+      <button class="btn" id="exportJSON">⬇️ Export JSON</button>
+      <button class="btn" id="exportCSV">⬇️ Export CSV</button>
+      <label class="btn ghost" for="importFile">📥 Import (JSON/CSV)</label>
+      <input id="importFile" type="file" accept=".json,.csv" class="hidden">
+    </div>
+  </div>
+</header>
+
+<main class="wrap grid">
+  <section class="card">
+    <h2>⚙️ Paramètres</h2>
+    <div class="grid cols-3">
+      <div>
+        <label>Taux banque annuel (%)</label>
+        <input id="tauxBanque" type="number" step="0.01" value="4.0">
+      </div>
+      <div>
+        <label>Durée banque (ans)</label>
+        <input id="dureeBanque" type="number" value="20">
+      </div>
+      <div>
+        <label>Montant prêt (€)</label>
+        <input id="montantPret" type="number" value="650000">
+      </div>
+      <div>
+        <label>Avance SASU (€)</label>
+        <input id="avanceSasu" type="number" value="90000">
+      </div>
+      <div>
+        <label>Taux SASU annuel (%)</label>
+        <input id="tauxSasu" type="number" step="0.01" value="3.0">
+      </div>
+      <div>
+        <label>Durée SASU (ans)</label>
+        <input id="dureeSasu" type="number" value="30">
+      </div>
+      <div>
+        <label>Coupon investisseur Phase 1 (€/mois)</label>
+        <input id="coupon1" type="number" value="341">
+      </div>
+      <div>
+        <label>Coupon investisseur Phase 2 (€/mois)</label>
+        <input id="coupon2" type="number" value="1000">
+      </div>
+      <div>
+        <label>Charges + TF (€/mois)</label>
+        <input id="charges" type="number" value="2250">
+      </div>
+      <div>
+        <label>Loyer par chambre (€/mois)</label>
+        <input id="loyerCh" type="number" value="700">
+      </div>
+      <div>
+        <label>Nb de chambres</label>
+        <input id="nbCh" type="number" value="12">
+      </div>
+      <div>
+        <label>Occupation (base)</label>
+        <input id="occBase" type="number" step="0.01" value="1.00">
+      </div>
+      <div>
+        <label>Occupation (prudent)</label>
+        <input id="occPrudent" type="number" step="0.01" value="0.93">
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🏠 Saisie du bien</h2>
+    <div class="grid cols-3">
+      <div>
+        <label>Ville</label>
+        <select id="villeSelect"></select>
+      </div>
+      <div>
+        <label>Adresse</label>
+        <input id="adresse" placeholder="Ex: 3 rue ..." />
+      </div>
+      <div>
+        <label>Prix d'achat (€)</label>
+        <input id="prixAchat" type="number" value="549000">
+      </div>
+      <div>
+        <label>Surface habitable (m²)</label>
+        <input id="surfHab" type="number" value="270">
+      </div>
+      <div>
+        <label>DPE</label>
+        <input id="dpe" placeholder="C, D..." />
+      </div>
+      <div>
+        <label>Année construction</label>
+        <input id="annee" type="number" placeholder="ex: 1975" />
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>📈 Résultats</h2>
+    <div class="kpi">
+      <div class="card">
+        <h3>Loyers base / mois</h3>
+        <p id="kLoyersBase" class="mono">—</p>
+      </div>
+      <div class="card">
+        <h3>Mensualité banque</h3>
+        <p id="kMensuBanque" class="mono">—</p>
+      </div>
+      <div class="card">
+        <h3>Mensualité SASU</h3>
+        <p id="kMensuSasu" class="mono">—</p>
+      </div>
+      <div class="card">
+        <h3>Cash-flow Phase 1</h3>
+        <p id="kCF1" class="mono">—</p>
+      </div>
+      <div class="card">
+        <h3>Cash-flow Phase 2</h3>
+        <p id="kCF2" class="mono">—</p>
+      </div>
+    </div>
+    <div class="grid cols-2" style="margin-top:12px">
+      <div class="card">
+        <h3>DSCR (base)</h3>
+        <p id="kDSCR" class="mono">—</p>
+      </div>
+      <div class="card">
+        <h3>Point mort d'occupation</h3>
+        <p id="kBreakEven" class="mono">—</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="flex" style="justify-content:space-between; align-items:center">
+      <h2>🗺️ Base_Villes (édition & import/export)</h2>
+      <div class="flex">
+        <button class="btn" id="addVille">➕ Ajouter une ville</button>
+      </div>
+    </div>
+    <div class="muted">Double-clique une cellule pour éditer. Les colonnes attendues : Ville, Code_Postal, Departement, RER_Ligne, Prix_m2_maison_ref, Loyer_m2_ref, Compatibilite, Potentiel_Cashflow, Temps_marche_gare_min, Eligibilite_30min_pied_ou_20min_bus, Note_qualite_10</div>
+    <div id="baseTableWrap" style="overflow:auto; max-height:360px; margin-top:8px">
+      <table id="baseTable"><thead></thead><tbody></tbody></table>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🏁 Comparateur de villes</h2>
+    <table id="compTable">
+      <thead>
+        <tr>
+          <th>Ville</th>
+          <th>Compatibilité</th>
+          <th>Potentiel</th>
+          <th>RER/Train</th>
+          <th>Prix m²</th>
+          <th>Loyer m²</th>
+          <th>Dist. gare (min)</th>
+          <th>Éligibilité</th>
+          <th>Note /10</th>
+          <th>Score_auto</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+</main>
+
+<footer class="wrap">
+  <div>Fichier autonome. Tes données restent locales dans ton navigateur (LocalStorage). Exporte régulièrement en JSON/CSV.</div>
+</footer>
+
+<script>
+// ---- Seed Base_Villes (subset from your dataset) ----
+const seedBase = [
+  // Ville, CP, Dept, RER, Prix_m2, Loyer_m2, Compat, Potentiel, Dist, Elig, Note
+  ["Juvisy-sur-Orge","91260","Essonne (91)","RER C/D",3300,19,"✅ Compatible","Bon",10,"Éligible",7.5],
+  ["Savigny-sur-Orge","91600","Essonne (91)","RER C",3300,19,"✅ Compatible","Bon",12,"Éligible",7.5],
+  ["Cergy-Préfecture","95000","Val-d’Oise (95)","RER A/J",3200,18,"✅ Compatible","Intéressant",12,"Éligible",7.5],
+  ["Poissy","78300","Yvelines (78)","RER A/J",4800,22,"⚠️ Limite","Possible mais serré",15,"Éligible",8.5],
+  ["Meulan-en-Yvelines","78250","Yvelines (78)","Transilien J",3200,18,"✅ Compatible","Élevé",20,"Éligible",6.5],
+  ["Champigny-sur-Marne","94500","Val-de-Marne (94)","RER A",4200,24,"⚠️ Difficile","Faible court terme",18,"Éligible",7.5],
+  ["Joinville-le-Pont","94340","Val-de-Marne (94)","RER A",5200,25,"⚠️ Limite","Bon",10,"Éligible",9.0],
+  ["Nogent-sur-Marne","94130","Val-de-Marne (94)","RER A",5200,25,"⚠️ Limite","Bon",14,"Éligible",9.0],
+  ["Saint-Maur-des-Fossés","94100","Val-de-Marne (94)","RER A",5200,25,"⚠️ Limite","Bon",12,"Éligible",8.5],
+  ["Sceaux","92330","Hauts-de-Seine (92)","RER B",5500,25,"⚠️ Limite","Bon",10,"Éligible",9.0],
+  ["Bourg-la-Reine","92340","Hauts-de-Seine (92)","RER B",5500,25,"⚠️ Limite","Bon",10,"Éligible",9.0],
+  ["Antony","92160","Hauts-de-Seine (92)","RER B",5200,25,"⚠️ Limite","Bon",12,"Éligible",8.5],
+  ["Houilles-Carrières-sur-Seine","78800","Yvelines (78)","RER A/J",4800,22,"⚠️ Limite","Bon",8,"Éligible",9.0],
+  ["Maisons-Laffitte","78600","Yvelines (78)","RER A/J",5000,22,"⚠️ Limite","Bon",15,"Éligible",9.0],
+  ["Achères","78260","Yvelines (78)","RER A/J",3200,18,"✅ Compatible","Intéressant",18,"Éligible",7.5],
+  ["Conflans-Sainte-Honorine","78700","Yvelines (78)","RER A/J",3400,18,"✅ Compatible","Intéressant",20,"Éligible",7.5],
+  ["Saint-Cyr-l’École","78210","Yvelines (78)","RER C",4200,20,"⚠️ Limite","Bon",15,"Éligible",7.5],
+  ["Versailles","78000","Yvelines (78)","RER C",6000,24,"❌","Faible court terme",20,"Éligible",9.0],
+  ["Massy","91300","Essonne (91)","RER B/C/TGV",4200,21,"✅ Compatible","Élevé",15,"Éligible",8.0],
+];
+
+const headers = ["Ville","Code_Postal","Departement","RER_Ligne","Prix_m2_maison_ref","Loyer_m2_ref","Compatibilite","Potentiel_Cashflow","Temps_marche_gare_min","Eligibilite_30min_pied_ou_20min_bus","Note_qualite_10"];
+
+function loadBase(){
+  const saved = localStorage.getItem("base_villes");
+  if(saved){
+    try { return JSON.parse(saved); } catch(e){}
+  }
+  return seedBase;
+}
+let baseVilles = loadBase();
+
+function saveBase(){ localStorage.setItem("base_villes", JSON.stringify(baseVilles)); }
+
+// ---- Build Base Table ----
+const baseTable = document.getElementById("baseTable");
+const baseThead = baseTable.querySelector("thead");
+const baseTbody = baseTable.querySelector("tbody");
+function renderBase(){
+  baseThead.innerHTML = "<tr>"+headers.map(h=>`<th>${h}</th>`).join("")+"</tr>";
+  baseTbody.innerHTML = "";
+  baseVilles.forEach((row, idx)=>{
+    const tr = document.createElement("tr");
+    row.forEach((cell, cidx)=>{
+      const td = document.createElement("td");
+      td.textContent = cell;
+      td.contentEditable = true;
+      td.addEventListener("blur", ()=>{
+        baseVilles[idx][cidx] = coerceValue(cidx, td.textContent);
+        saveBase(); refreshAll();
+      });
+      tr.appendChild(td);
+    });
+    baseTbody.appendChild(tr);
+  });
+}
+function coerceValue(cidx, val){
+  if([4,5,8,10].includes(cidx)){ // numeric columns
+    const num = Number(String(val).replace(",", ".").trim());
+    return isNaN(num)? val : num;
+  }
+  return val;
+}
+
+// ---- City dropdown ----
+const villeSelect = document.getElementById("villeSelect");
+function renderVilleSelect(){
+  villeSelect.innerHTML = baseVilles.map(r=>`<option value="${r[0]}">${r[0]}</option>`).join("");
+}
+
+// ---- Finance helpers ----
+function pmt(rate, nper, pv){
+  // PMT with end-of-period payments; rate as monthly decimal; pv positive
+  if(rate === 0) return -(pv / nper);
+  const x = Math.pow(1+rate, nper);
+  return -(pv * rate * x) / (x - 1);
+}
+
+// ---- Compute ----
+function getParams(){
+  const val = id => Number(document.getElementById(id).value.replace(",", "."));
+  return {
+    tauxBanque: val("tauxBanque")/100,
+    dureeBanque: val("dureeBanque"),
+    montantPret: val("montantPret"),
+    avanceSasu: val("avanceSasu"),
+    tauxSasu: val("tauxSasu")/100,
+    dureeSasu: val("dureeSasu"),
+    coupon1: val("coupon1"),
+    coupon2: val("coupon2"),
+    charges: val("charges"),
+    loyerCh: val("loyerCh"),
+    nbCh: val("nbCh"),
+    occBase: val("occBase"),
+    occPrudent: val("occPrudent"),
+  };
+}
+function findVille(name){
+  return baseVilles.find(r=>r[0]===name);
+}
+function money(n){ if(!isFinite(n)) return "—"; return n.toLocaleString('fr-FR', {style:'currency', currency:'EUR'}); }
+function ratio(n){ if(!isFinite(n)) return "—"; return (Math.round(n*100)/100).toString(); }
+function percent(n){ if(!isFinite(n)) return "—"; return (Math.round(n*100)/100) + " %"; }
+
+function compute(){
+  const P = getParams();
+  const vname = villeSelect.value;
+  const v = findVille(vname) || baseVilles[0];
+  const loyersBase = P.loyerCh * P.nbCh * P.occBase;
+  const loyersPrudent = P.loyerCh * P.nbCh * P.occPrudent;
+  const mensuBanque = -pmt(P.tauxBanque/12, P.dureeBanque*12, P.montantPret);
+  const mensuSasu = -pmt(P.tauxSasu/12, P.dureeSasu*12, P.avanceSasu);
+  const NOI_base = loyersBase - P.charges;
+  const NOI_prudent = loyersPrudent - P.charges;
+  const netPhase1 = NOI_base - mensuBanque - mensuSasu - P.coupon1;
+  const netPhase2 = NOI_base - mensuSasu - P.coupon2;
+  const dscr = NOI_base / mensuBanque;
+  const pointMort = (mensuBanque + mensuSasu + P.coupon1 + P.charges) / (P.loyerCh * P.nbCh) * 100;
+
+  // KPIs
+  document.getElementById("kLoyersBase").textContent = money(loyersBase);
+  document.getElementById("kMensuBanque").textContent = money(mensuBanque);
+  document.getElementById("kMensuSasu").textContent = money(mensuSasu);
+  document.getElementById("kCF1").textContent = money(netPhase1);
+  document.getElementById("kCF2").textContent = money(netPhase2);
+  document.getElementById("kDSCR").textContent = ratio(dscr);
+  document.getElementById("kBreakEven").textContent = percent(pointMort);
+
+  // Comparator table
+  renderComparator();
+}
+
+// ---- Comparator (Score_auto) ----
+function scoreRow(r){
+  const compat = r[6];
+  const potentiel = r[7];
+  const dist = Number(r[8]);
+  const elig = r[9];
+  const qual = Number(r[10]) || 0;
+  let sCompat = 0;
+  if(compat==="✅ Compatible" || compat==="Compatible") sCompat = 50;
+  else if(compat==="⚠️ Limite") sCompat = 25;
+  else if(compat==="⚠️ Difficile") sCompat = 10;
+  else sCompat = 0;
+
+  let sPot = 10;
+  if(potentiel==="Élevé" || potentiel==="Eleve") sPot = 30;
+  else if(potentiel==="Bon") sPot = 20;
+  else if(potentiel==="Intéressant") sPot = 25;
+  else if(potentiel==="Possible mais serré") sPot = 15;
+
+  let sAcc = 5;
+  if(elig==="Éligible" && dist<=20) sAcc = 20;
+  else if(elig==="Éligible") sAcc = 15;
+
+  let sQual = Math.max(0, Math.min(10, qual)) * 2; // max 20
+  return sCompat + sPot + sAcc + sQual;
+}
+
+function renderComparator(){
+  const tbody = document.querySelector("#compTable tbody");
+  tbody.innerHTML = "";
+  const rows = baseVilles.map(r=>{
+    const sc = scoreRow(r);
+    return [...r.slice(0,11), sc];
+  }).sort((a,b)=> b[11] - a[11]); // sort by score desc
+
+  rows.forEach(r=>{
+    const tr = document.createElement("tr");
+    // Ville, Compat, Potentiel, RER, Prix, Loyer, Dist, Elig, Note, Score
+    const cells = [r[0], r[6], r[7], r[3], r[4], r[5], r[8], r[9], r[10], r[11]];
+    cells.forEach((c,i)=>{
+      const td = document.createElement("td");
+      td.textContent = i===4||i===5 ? (Number(c)||0).toLocaleString('fr-FR') : c;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+// ---- add city ----
+document.getElementById("addVille").addEventListener("click", ()=>{
+  baseVilles.push(["Nouvelle ville","","","",0,0,"✅ Compatible","Bon",15,"Éligible",7.5]);
+  saveBase(); renderBase(); renderVilleSelect(); compute();
+});
+
+// ---- export/import ----
+document.getElementById("exportJSON").addEventListener("click", ()=>{
+  const data = { base_villes: baseVilles };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "invest_immo_data.json";
+  a.click();
+});
+document.getElementById("exportCSV").addEventListener("click", ()=>{
+  const all = [headers, ...baseVilles];
+  const csv = all.map(row=> row.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], {type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "base_villes.csv";
+  a.click();
+});
+document.getElementById("importFile").addEventListener("change", (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    const text = reader.result;
+    try{
+      if(file.name.endsWith(".json")){
+        const obj = JSON.parse(text);
+        if(obj.base_villes && Array.isArray(obj.base_villes)){
+          baseVilles = obj.base_villes;
+          saveBase(); refreshAll();
+        }
+      }else{
+        // CSV: simple split
+        const lines = text.split(/\r?\n/).filter(Boolean);
+        const rows = lines.slice(1).map(l=>l.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/).map(s=>s.replace(/^"|"$/g,"").replace(/""/g,'"')));
+        baseVilles = rows.map(r=>[r[0],r[1],r[2],r[3],Number(r[4]||0),Number(r[5]||0),r[6],r[7],Number(r[8]||0),r[9],Number(r[10]||0)]);
+        saveBase(); refreshAll();
+      }
+    }catch(err){ alert("Import invalide : " + err.message); }
+  };
+  reader.readAsText(file);
+});
+
+function refreshAll(){
+  renderBase();
+  renderVilleSelect();
+  compute();
+}
+
+// init
+refreshAll();
+villeSelect.addEventListener("change", compute);
+document.querySelectorAll("input").forEach(i=> i.addEventListener("input", compute));
+</script>
+</body>
+</html>
